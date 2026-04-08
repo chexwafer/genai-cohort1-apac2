@@ -1,0 +1,69 @@
+
+  <div class="flex flex-col h-9/10 max-h-9/10">
+    <div
+      class="min-h-full max-h-full overflow-auto flex flex-col g-0.5 p-3 rounded-2xl border border-solid border-gray-300"
+      #messagesRef
+      aria-live="polite"
+    >
+      @for (msg of messages(); track msg) {
+        <div
+          class="message"
+          [class.user]="msg.from === 'user'"
+          [class.agent]="msg.from === 'agent'"
+        >
+          <div class="bubble my-2" [class.pending]="msg.pending">
+            @if (msg.pending) {
+              <div class="thinking">Thinking<span class="dots">...</span></div>
+            } @else {
+              <div class="reply">{{ msg.text }}</div>
+              <div *ngIf="msg.tasks?.length" class="tasks">
+                <ol>
+                  <li *ngFor="let task of msg.tasks">
+                    <h4><b>{{ task.title }}</b></h4>
+                    <h5>Complexity: {{ task.complexity }}</h5>
+                    <h5>Estimated duration: {{ task.duration }}</h5>
+                    <h5>Dependency: {{ task.dependency }}</h5>
+                    <h5>Risk: {{ task.risk }}</h5>
+                  </li>
+                </ol>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+  <div class="flex flex-col h-1/10 max-h-1/10">
+    <div class="w-full flex flex-row gap-5">
+      <form
+        (submit)="$event.preventDefault(); send()"
+        class="flex g-2 mt-2 w-full"
+        role="search"
+      >
+      <div class="flex flex-11/12">
+        <input
+          class="flex p-3 rounded-2xl border border-solid border-gray-300 w-full"
+          type="text"
+          placeholder="Tell us your big idea, and we'll break it down into actionable tasks!"
+          [value]="messageText()"
+          (input)="messageText.set($event.target.value)"
+          aria-label="Message"
+        />
+        </div>
+        <div class="flex flex-1/12">
+        <button
+          type="submit"
+          [disabled]="isLoading()"
+          [attr.aria-busy]="isLoading()"
+          class="px-4 py-2 rounded-xl bg-blue-600 text-white inline-flex items-center"
+        >
+          @if (isLoading()) {
+            <span class="spinner" aria-hidden="true"></span>
+          } @else {
+            <span>Send</span>
+          }
+        </button>
+        </div>
+      </form>
+    </div>
+  </div>

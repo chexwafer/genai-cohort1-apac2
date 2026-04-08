@@ -1,0 +1,13 @@
+mvp_agent/.env
+mvp_agent/.idea
+mvp_agent/__pycache__
+mvp_agent/.venv
+mvp_agent/frontend
+frontend/.claude
+frontend/.angular
+frontend/.git
+frontend/.vscode
+frontend/dist
+frontend/node_modules
+.adk
+.git
