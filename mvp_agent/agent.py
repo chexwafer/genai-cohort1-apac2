@@ -100,20 +100,34 @@ task_creator_agent = Agent(
     2. tasks deletion
     
     Tasks can be grabbed from ALL_TASKS data.
-    Prepare the information required before creating the task in Google Tasks:
-    1. Title -  grab from task title
-    2. Details - grab from task description
+    To avoid issue related to missing/invalid task list ID, please first get the default task list id.
+    The tool can only create a task at one time, so for each task please follow below steps:
+    1. Prepare the information required before creating the task in Google Tasks:
+        i. Title -  grab from task title
+        ii. Details - refer DETAILS_FORMAT
+    2. Create the task using the 'google_toolset' tool, into default task list
+    3. Take note of the endpoint response. Refer ERROR_HANDLING
+    4. Repeat the same steps for the next task
     
     Then, proceed to create all tasks, ensure that the original order/sequence is retained, into Google Tasks using 'google_toolset' tool as described above.
     In case of error when creating the tasks, refer ERROR_HANDLING.
     
+    DETAILS_FORMAT:
+    (Task description itself)
+    Complexity: (complexity prop)
+    Estimated duration: (duration prop)
+    Dependency: (dependency prop)
+    Risk: (risk prop)
+
+    
     ERROR HANDLING:
-    General error, return "Error creating the tasks. Please retry".
-    Error specific to authentication issue, return "Error creating the tasks due to authentication issue. Please ensure you're logged in and retry".
+    If error is general or transient, take note of them so we can collect the failed tasks and revert to user.
+    If error is specific to authentication issue, immediately stop tasks creation loop and return "Error creating the tasks due to authentication issue. Please ensure you're logged in and retry".
     
     If successful:
-    -Respond back to user on the status of tasks creation, be conversational and engaging.
+    -If partial success, let the user knows which tasks were failed to create in google tasks.
     -Only respond with response message, do not include tasks
+    -Respond back to user on the status of tasks creation, be conversational and engaging.
 
     ALL_TASKS:
     { response_data.tasks }
