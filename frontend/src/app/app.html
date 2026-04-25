@@ -36,9 +36,18 @@
 
     --pill-accent: var(--bright-blue);
 
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-      "Segoe UI Symbol";
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif,
+      'Apple Color Emoji',
+      'Segoe UI Emoji',
+      'Segoe UI Symbol';
     box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -51,9 +60,18 @@
     line-height: 100%;
     letter-spacing: -0.125rem;
     margin: 0;
-    font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-      "Segoe UI Symbol";
+    font-family:
+      'Inter Tight',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif,
+      'Apple Color Emoji',
+      'Segoe UI Emoji',
+      'Segoe UI Symbol';
   }
 
   p {
@@ -182,33 +200,150 @@
   }
 </style>
 
-<nav style="width:100%; background:#f8fafc; color:#111827; padding:0.5rem 1rem; box-sizing:border-box; border-bottom:1px solid #e6e9ee;">
-  <div style="max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:1rem;">
-    <div style="font-weight:700; font-size:1.125rem;">SimpliTasks</div>
-    <div style="display:flex; gap:0.5rem; align-items:center;">
-      <button *ngIf="!auth(); else loggedIn" (click)="login()" class="cursor-pointer"  style="background:#2563eb; color:white; border:none; padding:0.4rem 0.75rem; border-radius:6px;">Login</button>
+<nav class="w-full bg-slate-50 text-slate-900 px-4 py-2 box-border border-b border-gray-200">
+  <div class="max-w-275 mx-auto w-full flex items-center justify-between gap-4">
+    <div class="font-bold text-lg">SimpliTasks</div>
+    <div class="flex items-center gap-2">
+      <button
+        *ngIf="!auth(); else loggedIn"
+        (click)="login()"
+        class="cursor-pointer bg-blue-600 text-white border-0 px-3 py-1.5 rounded-md"
+      >
+        Login
+      </button>
       <ng-template #loggedIn>
-        <button (click)="logout()" class="cursor-pointer" style="background:#111827; color:white; border:none; padding:0.4rem 0.75rem; border-radius:6px;">Logout</button>
+        <button
+          (click)="logout()"
+          class="cursor-pointer bg-slate-900 text-white border-0 px-3 py-1.5 rounded-md"
+        >
+          Logout
+        </button>
       </ng-template>
     </div>
   </div>
 </nav>
 
-<div class="mt-25" style=" display:flex; align-items:center; justify-content:center; pointer-events: none;">
-  <div class="chat-shell" role="region" aria-label="Chat shell" style="width:70vw; height:70vh; box-shadow:0 6px 24px rgba(16,24,40,0.12); border-radius:12px; background:#ffffff; display:flex; flex-direction:column; overflow:hidden; pointer-events: auto;">
-    <div class="chat-header" style="padding:0.75rem 1rem; border-bottom:1px solid #eef2f7; display:flex; align-items:center; justify-content:space-between; gap:1rem;">
-      <div style="font-weight:600; color:#111827;">Session</div>
-      <div style="display:flex; gap:0.75rem; align-items:center;">
-        <small style="color:#374151">User: {{ session.userId() || '—' }} · Session: {{ session.sessionId() || '—' }}</small>
-        <button (click)="generateIds()" style="background:#2563eb; color:white; border:none; padding:0.4rem 0.75rem; border-radius:6px;">New Session</button>
+<div class="flex justify-center mt-10 min-h-[70vh]">
+  <div class="w-4xl border border-gray-200 rounded-lg flex flex-row bg-white">
+    <div class="flex flex-col w-1/4 border-r border-gray-200">
+      <div class="p-4">
+        <div><span class="text-slate-500 font-semibold uppercase">Projects</span></div>
+        <ul class="my-4 space-y-4">
+          <li class="text-gray-400">Setup React App</li>
+          <li class="text-black">Setup Node.js Server</li>
+          <li class="text-gray-400">Deploy to Cloud</li>
+        </ul>
+        <div><span class="text-slate-500 font-semibold uppercase">+ New</span></div>
       </div>
     </div>
+    <div class="flex flex-col w-3/4">
+      <div class="bg-blue-100">
+        <div class="p-4">
+          <div><span class="font-semibold text-lg">Setup Node.js Server</span></div>
+          <div class="mt-1">
+            <span class="">Goal: Local Node.js is setup and able to run without errors</span>
+          </div>
+          <div class=""><span class="">Duration: 60 minutes</span></div>
+        </div>
+      </div>
+      <div class="p-4">
+        @if (taskRunState() === TaskRunState.NotStarted) {
+          <div class=""><span class="font-semibold">Tasks (2/4)</span></div>
+          <div>
+            <ul class="my-4 space-y-2">
+              @if (tasks().length === 0) {
+                <div class="text-gray-400 text-center py-4">
+                  No tasks yet. Add a new task to get started.
+                </div>
+              } @else {
+                @let nextTaskToStart = getNextTaskToStart();
+                @for (task of tasks(); track task.title) {
+                  @if (task.isCompleted) {
+                    <li class="text-black text-md">
+                      <button class="font-semibold text-md text-cyan-400">✓</button>
+                      {{ task.title }}
+                    </li>
+                  } @else {
+                    <li
+                      class="{{
+                        nextTaskToStart?.title === task.title
+                          ? 'text-lg font-semibold'
+                          : 'text-gray-400 text-md'
+                      }}"
+                    >
+                      <button class="font-semibold">O</button> {{ task.title }}
+                    </li>
+                  }
+                }
+              }
+            </ul>
+          </div>
+        }
 
-    <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:1rem;">
-      <div style="width:100%; height:60vh; display:flex; align-items:stretch;">
-        <app-chat #chat style="flex:1; height:100%;"></app-chat>
+        @if (activeTask()) {
+          @let nextTask = getNextTaskToStart();
+          <div class="flex flex-col items-center space-y-4">
+            <div class="text-3xl font-semibold">{{ activeTask()?.title }}</div>
+            <div class="text-lg">{{ activeTask()?.description }}</div>
+            <div id="taskTimer" class="text-6xl font-semibold"></div>
+            @if (nextTask) {
+            <div class="text-md font-light">Next: {{ nextTask.title }}</div>
+            } @else {
+              <div class="text-md">Hooray 🎉! This is the last task!</div>
+            }
+          </div>
+        }
+        @if (getNextTaskToStart() || taskRunState() !== TaskRunState.NotStarted) {
+          <div class="flex justify-center mt-2">
+            <button
+              class="bg-blue-600 text-white border-0 px-2 py-1.5 rounded-md uppercase {{taskRunState() === TaskRunState.InProgress ? 'hidden' : ''}}"
+              (click)="startTask(null)"
+            >
+              ▶
+            </button>
+            <button
+              class="text-lg bg-blue-600 text-white border-0 px-2 py-1.5 rounded-md uppercase {{taskRunState() === TaskRunState.NotStarted ? 'hidden' : ''}}  "
+              (click)="stopTask()"
+            >
+              ⏹
+            </button>
+          </div>
+        }
       </div>
     </div>
   </div>
 </div>
+<!-- <div class="items-start flex">
+  <span class="text-slate-500 mb-4">This is a demo of the SimpliTasks agent framework.</span>
+</div>
+<div class="mt-6 flex flex-col items-center justify-center pointer-events-none">
+  <div
+    class="chat-shell w-[70vw] h-[70vh] shadow-lg rounded-xl bg-white flex flex-col overflow-hidden pointer-events-auto"
+    role="region"
+    aria-label="Chat shell"
+  >
+    <div
+      class="chat-header px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-4"
+    >
+      <div class="font-semibold text-slate-900">Session</div>
+      <div class="flex items-center gap-3">
+        <small class="text-slate-600"
+          >User: {{ session.userId() || '—' }} · Session: {{ session.sessionId() || '—' }}</small
+        >
+        <button
+          (click)="generateIds()"
+          class="bg-blue-600 text-white border-0 px-3 py-1.5 rounded-md"
+        >
+          New Session
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 flex items-center justify-center p-4">
+      <div class="w-full h-[50vh] flex items-stretch">
+        <app-chat #chat class="flex-1 h-full"></app-chat>
+      </div>
+    </div>
+  </div>
+</div> -->
 <router-outlet />
