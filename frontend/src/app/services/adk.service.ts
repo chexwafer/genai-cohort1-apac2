@@ -1,6 +1,8 @@
+import { API_BASE_URL } from '../config';
+
 export class AdkService {
-  // Update this base URL to the local ADK REST endpoint as needed
-  private readonly baseUrl = 'http://localhost:8080';
+  // use centralized base URL
+  private readonly baseUrl = API_BASE_URL;
 
   /**
    * Send a message to the ADK REST API. If `accessToken` is provided,
@@ -10,7 +12,8 @@ export class AdkService {
     message: string,
     accessToken?: string,
     userId?: string | null,
-    sessionId?: string | null
+    sessionId?: string | null,
+    signal?: AbortSignal
   ): Promise<any> {
     const params = new URLSearchParams();
     params.append('query', message);
@@ -26,6 +29,7 @@ export class AdkService {
       const resp = await fetch(url, {
         method: 'GET',
         headers,
+        signal,
       });
       if (!resp.ok) {
         const text = await resp.text();

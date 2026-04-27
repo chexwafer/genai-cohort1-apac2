@@ -1,12 +1,15 @@
-import { Component, inject, signal, ViewChild } from '@angular/core';
+import { Component, signal, ViewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ChatComponent } from './chat/chat.component';
 import { session } from './services/session.service';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { authCodeFlowConfig } from './auth-config';
-import { createEmptyTask, Task } from './models/task.model';
-import { interval, startWith, timer } from 'rxjs';
+import { Task } from './models/task.model';
+import { timer } from 'rxjs';
+import { TaskService } from './services/task';
+import { Project } from './models/project.model';
+import { ProjectService } from './services/project';
 
 enum TaskRunState {
   NotStarted = 'Not Started',
@@ -26,19 +29,46 @@ export class App {
   public readonly session = session;
   public readonly auth = signal(false);
   public readonly tasks = signal<Task[]>([]);
+  public readonly projects = signal<Project[]>([]);
   public readonly activeTask = signal<Task | null>(null);
   public readonly taskRunState = signal<TaskRunState>(TaskRunState.NotStarted);
   public TaskRunState = TaskRunState; // expose enum to template
   public intervalId: any = null;
+  public selectedProjectId = signal<number | null>(null);
+  public currentView = signal<'projects' | 'chat'>('projects');
+  public isLoadingData = signal(false);
 
   @ViewChild('chat') private chat?: ChatComponent;
 
-  constructor(private oAuthService: OAuthService) {
+  constructor(
+    private oAuthService: OAuthService,
+    private taskService: TaskService,
+    private projectService: ProjectService,
+  ) {
     this.configure();
   }
 
+  //Function to greet user based on their time i.e Good morning, good afternoon, good evening
+  public get greeting(): string {
+    const currentHour = new Date().getHours();
+
+    if (currentHour < 12) {
+      return 'Good morning!';
+    } else if (currentHour < 18) {
+      return 'Good afternoon!';
+    } else {
+      return 'Good evening!';
+    }
+  }
+
   public ngOnInit() {
+    // ensure we have a user/session id persisted — generate new ones if missing
+    if (!this.session.userId() || !this.session.sessionId()) {
+      this.generateIds();
+    }
+
     this.getTasks();
+    this.getProjects();
   }
 
   public login() {
@@ -55,6 +85,7 @@ export class App {
     this.session.generate();
     // clear chat for the new session
     this.chat?.clear();
+    this.chat?.isLoading.set(false);
   }
 
   public isAuthenticated(): boolean {
@@ -63,6 +94,20 @@ export class App {
     } catch {
       return false;
     }
+  }
+
+  public onSelectProject(projectId: number) {
+    if (this.selectedProjectId() !== projectId) {
+      this.stopTask();
+    }
+    this.selectedProjectId.set(projectId);
+    this.currentView.set('projects');
+    this.getTasks();
+  }
+
+  onClickAIAgent() {
+    console.log('AI Agent button clicked');
+    this.currentView.set('chat');
   }
 
   public startTask(task: Task | null) {
@@ -74,7 +119,7 @@ export class App {
       this.intervalId = null;
     }
     let startTime = new Date();
-    let endTime = new Date(startTime.getTime() + parseInt(taskToStart.duration) * 1000);
+    let endTime = new Date(startTime.getTime() + taskToStart.duration * 1000);
 
     this.intervalId = timer(0, 1000).subscribe(() => {
       // Get today's date and time
@@ -96,8 +141,10 @@ export class App {
   public completeTask() {
     const activeTask = this.activeTask();
     if (activeTask) {
-      activeTask.isCompleted = true;
-      this.tasks.update((tasks) => tasks.map((t) => (t === activeTask ? activeTask : t)));
+      this.taskService.markTaskAsCompleted(activeTask.id).subscribe(() => {
+        activeTask.isCompleted = true;
+        this.tasks.update((tasks) => tasks.map((t) => (t === activeTask ? activeTask : t)));
+      });
     }
 
     const nextTask = this.getNextTaskToStart();
@@ -121,37 +168,41 @@ export class App {
     this.taskRunState.set(TaskRunState.Paused);
   }
 
+  public getProjects(): Project[] {
+    this.isLoadingData.set(true);
+    this.projectService.getAllProjects().subscribe({
+      next: (fetchedProjects) => {
+        console.log('Fetched projects from API:', fetchedProjects);
+        this.projects.set(fetchedProjects);
+        this.isLoadingData.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to fetch projects', err);
+        this.isLoadingData.set(false);
+      },
+    });
+
+    return this.projects();
+  }
+
   public getTasks(): Task[] {
-    let tasks: Task[] = [];
-    let task1 = createEmptyTask();
-    task1.title = 'Install nodejs';
-    task1.description = 'Install nodejs on your machine';
-    task1.duration = '5';
-    task1.isCompleted = false;
+    if (!this.selectedProjectId()) {
+      return [];
+    }
 
-    let task2 = createEmptyTask();
-    task2.title = 'Create project folder';
-    task2.description = 'Create a new folder for your project';
-    task2.duration = '150';
-    task2.isCompleted = true;
+    this.isLoadingData.set(true);
+    this.taskService.getAllTasksByProject(this.selectedProjectId()).subscribe({
+      next: (fetchedTasks) => {
+        console.log('Fetched tasks from API:', fetchedTasks);
+        this.tasks.set(fetchedTasks);
+        this.isLoadingData.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to fetch tasks', err);
+        this.isLoadingData.set(false);
+      },
+    });
 
-    let task3 = createEmptyTask();
-    task3.title = 'Deploy to Cloud';
-    task3.description = 'Deploy your application to the cloud';
-    task3.duration = '3600';
-    task3.isCompleted = true;
-
-    let task4 = createEmptyTask();
-    task4.title = 'Verification and testing';
-    task4.description = 'Verify and test your application';
-    task4.duration = '10';
-    task4.isCompleted = false;
-    tasks.push(task1);
-    tasks.push(task2);
-    tasks.push(task3);
-    tasks.push(task4);
-
-    this.tasks.set(tasks);
     return this.tasks();
   }
 

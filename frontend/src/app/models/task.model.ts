@@ -1,23 +1,19 @@
 export interface Task {
+  id: number
   title: string;
   description: string;
-  complexity: string;
-  duration: string;
-  dependency: string;
-  risk: string;
-  shouldTimeBlocked: boolean;
+  duration: number;
   isCompleted?: boolean;
+  sequence: number;
 }
 
 export function createEmptyTask(): Task {
   return {
+    id: 0,
     title: '',
     description: '',
-    complexity: '',
-    duration: '',
-    dependency: '',
-    risk: '',
-    shouldTimeBlocked: false,
+    duration: 0,
     isCompleted: false,
+    sequence: 1
   };
 }

@@ -15,15 +15,13 @@
             @if (msg.pending) {
               <div class="thinking">Thinking<span class="dots">...</span></div>
             } @else {
-              <div class="reply">{{ msg.text }}</div>
+              <div class="reply" [innerHTML]="renderMarkdown(msg.text)"></div>
               <div *ngIf="msg.tasks?.length" class="tasks">
                 <ol>
                   <li *ngFor="let task of msg.tasks">
                     <h4><b>{{ task.title }}</b></h4>
-                    <h5>Complexity: {{ task.complexity }}</h5>
-                    <h5>Estimated duration: {{ task.duration }}</h5>
-                    <h5>Dependency: {{ task.dependency }}</h5>
-                    <h5>Risk: {{ task.risk }}</h5>
+                    <h5>Description: {{ task.description }}</h5>
+                    <h5>Estimated duration: {{ formatDuration(task.duration) }}</h5>
                   </li>
                 </ol>
               </div>
@@ -52,13 +50,14 @@
         </div>
         <div class="flex flex-1/12">
         <button
-          type="submit"
-          [disabled]="isLoading()"
+          type="button"
+          (click)="isLoading() ? cancel() : send()"
           [attr.aria-busy]="isLoading()"
           class="px-4 py-2 rounded-xl bg-blue-600 text-white inline-flex items-center"
         >
           @if (isLoading()) {
             <span class="spinner" aria-hidden="true"></span>
+            <span class="ml-2">Stop</span>
           } @else {
             <span>Send</span>
           }
